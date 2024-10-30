@@ -5,22 +5,40 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 
-
+root_url = 'https://lkml.org/lkml'
+year_urls = []
+month_urls = []
+day_urls = []
 driver = webdriver.Chrome() # to open the browser 
 wait = WebDriverWait(driver, 10)
 
 
-root_url = 'https://lkml.org/lkml'
+def get_month_urls(url):
+  driver.get(url)
+  year = url[-4:]
+  
+  months = driver.find_elements(By.TAG_NAME, "a")
+
+  for i in range(len(months)):
+    if '{year}/' in url and (len(month_urls) == 0 or url != month_urls[-1])\
+      and url != 'https://lkml.org/lkml/last100':
+      month_urls.append(url)
+
+def get_day_urls(url):
+  driver.get(url)
+  year = url[-7:-3]
+  month = url[-3:]
+  
+  days = driver.find_elements(By.TAG_NAME, "a")
+
+  for i in range(len(days)):
+    if '{year}/{month}/' in url and (len(day_urls) == 0 or url != day_urls[-1])\
+      and url != 'https://lkml.org/lkml/last100':
+      day_urls.append(url)
+
+
 driver.get(root_url) 
 years = driver.find_elements(By.TAG_NAME, "a")
-years_urls = []
-months_urls = []
-
-
-def get_months(driver, year):
-  for i in range(len(5)):
-    if '{year}/' in url and (len(months_urls) == 0 or url != months_urls[-1]):
-      months_urls.append(url)
 
 for i in range(len(years)):
   url = years[i].get_attribute("href")
@@ -28,22 +46,36 @@ for i in range(len(years)):
   if url is None or url == "":
     continue
   
-  elif ("lkml/" in url and (len(years_urls) == 0 or url != years_urls[-1]))\
+  elif ("lkml/" in url and (len(year_urls) == 0 or url != year_urls[-1]))\
       and url != 'https://lkml.org/lkml/last100':
-    years_urls.append(url)
+    year_urls.append(url)
 
 
-for i in range(len(years_urls)):
-  'https://lkml.org/lkml/2024/1'
-  url = years_urls[i]
+for i in range(len(year_urls)):
+  # 'https://lkml.org/lkml/{year}/{nonth}/'
+  url = year_urls[i].get_attribute("href")
+
+  if url is None or url == "":
+    continue
+
+  get_month_urls(url)
+
+for i in range(len(month_urls)):
+  url = month_urls[i].get_attribute("href")
+
+  if url is None or url == "":
+    continue
+
+  get_day_urls(url)
+
+for i in range(day_urls):
+  url = day_urls[i].get_attribute("href")
+
+  if url is None or url == "":
+    continue
+
   driver.get(url)
-
-  year = years_urls[0][-4:]
-  get_months(driver, year)
-
-  months = driver.find_elements(By.TAG_NAME, "a")
-
-
+  
 
 
 
