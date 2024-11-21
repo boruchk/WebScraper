@@ -1,118 +1,127 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
 
 root_url = 'https://lkml.org/lkml'
 year_urls = []
 month_urls = []
 day_urls = []
+changelog_urls = []
 driver = webdriver.Chrome() # to open the browser 
 wait = WebDriverWait(driver, 10)
 
-
-def get_month_urls(url):
-  driver.get(url)
-  year = url[-4:]
-  
-  months = driver.find_elements(By.TAG_NAME, "a")
-
-  for i in range(len(months)):
-    if '{year}/' in url and (len(month_urls) == 0 or url != month_urls[-1])\
-      and url != 'https://lkml.org/lkml/last100':
-      month_urls.append(url)
-
-def get_day_urls(url):
-  driver.get(url)
-  year = url[-7:-3]
-  month = url[-3:]
-  
-  days = driver.find_elements(By.TAG_NAME, "a")
-
-  for i in range(len(days)):
-    if '{year}/{month}/' in url and (len(day_urls) == 0 or url != day_urls[-1])\
-      and url != 'https://lkml.org/lkml/last100':
-      day_urls.append(url)
+keywords = ['desktop', 'Desktop', 'DESKTOP', 'pc', 'Pc', 'PC']
+filePath = "daysMentioned.txt"
 
 
-driver.get(root_url) 
-years = driver.find_elements(By.TAG_NAME, "a")
+def get_year_urls():
+  years = driver.find_elements(By.TAG_NAME, "a")
 
-for i in range(len(years)):
-  url = years[i].get_attribute("href")
-
-  if url is None or url == "":
-    continue
-  
-  elif ("lkml/" in url and (len(year_urls) == 0 or url != year_urls[-1]))\
-      and url != 'https://lkml.org/lkml/last100':
-    year_urls.append(url)
-
-
-for i in range(len(year_urls)):
-  # 'https://lkml.org/lkml/{year}/{nonth}/'
-  url = year_urls[i].get_attribute("href")
-
-  if url is None or url == "":
-    continue
-
-  get_month_urls(url)
-
-for i in range(len(month_urls)):
-  url = month_urls[i].get_attribute("href")
-
-  if url is None or url == "":
-    continue
-
-  get_day_urls(url)
-
-for i in range(day_urls):
-  url = day_urls[i].get_attribute("href")
-
-  if url is None or url == "":
-    continue
-
-  driver.get(url)
-  
-
-
-
-two_four_home = 'https://lkml.org/lkml/2024'
-driver.get(two_four_home) 
-two_four = driver.find_elements(By.TAG_NAME, "a")
-two_four_months = []
-two_four_urls = []
-
-for i in range(len(two_four)):
-  url = two_four[i].get_attribute("href")
-
-  if url is None or url == "":
-    continue
-  
-  elif "2024/" in url and (len(two_four_months) == 0 or url != two_four_months[-1]):
-    two_four_months.append(url)
-
-
-for i in range(len(two_four_months)):
-  driver.get(two_four_months[i])
-  jan_days = driver.find_elements(By.TAG_NAME, "a")
-
-  for i in range(len(jan_days)):
-    url = jan_days[i].get_attribute("href")
+  for i in range(len(years)):
+    url = years[i].get_attribute("href")
 
     if url is None or url == "":
       continue
     
-    elif (("/1/" in url or "/2/" in url or "/3/" in url or "/4/" in url\
-        or "/5/" in url or "/6/" in url or "/7/" in url or "/8/" in url\
-        or "/9/" in url or "/10/" in url or "/11/" in url or "/12/" in url)\
-        and (len(two_four_urls) == 0 or url != two_four_urls[-1])):
-      two_four_urls.append(url)
+    elif ("lkml/" in url and (len(year_urls) == 0 or url != year_urls[-1]))\
+        and url != 'https://lkml.org/lkml/last100':
+      year_urls.append(url)
 
 
-# with open("driverWordCount.txt", "r+") as file:
-#   for url in two_four_urls:
-#     file.write(str(url))
-#     file.write('\n')
+def get_month_urls(year_url):
+  driver.get(year_url)
+  year = year_url[-4:] + '/'
+  
+  months = driver.find_elements(By.TAG_NAME, "a")
+
+  for i in range(len(months)):
+    url = months[i].get_attribute("href")
+    if year in url and (len(month_urls) == 0 or url != month_urls[-1])\
+      and url != 'https://lkml.org/lkml/last100':
+      month_urls.append(url)
+
+
+def get_day_urls(month_url):
+  driver.get(month_url)
+  year = month_url[-7:-3]
+  month = month_url[-3:]
+  text = year + month + '/'
+  
+  days = driver.find_elements(By.TAG_NAME, "a")
+
+  for i in range(len(days)):
+    url = days[i].get_attribute("href")
+    if text in url and (len(day_urls) == 0 or url != day_urls[-1])\
+      and url != 'https://lkml.org/lkml/last100':
+      day_urls.append(url)
+
+
+def get_changelog_urls(day_url):
+  driver.get(day_url)
+  text = day_url[-8:] + '/'
+
+  changelogs = driver.find_elements(By.TAG_NAME, "a")
+
+  for i in range(len(changelogs)):
+    url = changelogs[i].get_attribute("href")
+    if text in url and (len(day_urls) == 0 or url != day_urls[-1])\
+      and url != 'https://lkml.org/lkml/last100':
+      changelog_urls.append(url)
+
+
+def search_urls(file, changelog_url):
+  driver.get(changelog_url)
+
+  textboxes = driver.find_elements(By.TAG_NAME, "pre")
+
+  for i in range(len(textboxes)):
+    for word in keywords:
+      if textboxes[i].find_elements(By.XPATH, "//*[contains(text(), 'desktop')]"):
+        date = changelog_url[-12:-3]
+        file.write(date)
+        file.write('\n')
+      elif textboxes[i].find_elements(By.XPATH, "//*[contains(text(), 'Desktop')]"):
+        date = changelog_url[-12:-3]
+        file.write(date)
+        file.write('\n')
+      elif textboxes[i].find_elements(By.XPATH, "//*[contains(text(), 'DESKTOP')]"):
+        date = changelog_url[-12:-3]
+        file.write(date)
+        file.write('\n')
+      elif textboxes[i].find_elements(By.XPATH, "//*[contains(text(), 'pc')]"):
+        date = changelog_url[-12:-3]
+        file.write(date)
+        file.write('\n')
+      elif textboxes[i].find_elements(By.XPATH, "//*[contains(text(), 'Pc')]"):
+        date = changelog_url[-12:-3]
+        file.write(date)
+        file.write('\n')
+      elif textboxes[i].find_elements(By.XPATH, "//*[contains(text(), 'PC')]"):
+        date = changelog_url[-12:-3]
+        file.write(date)
+        file.write('\n')
+
+
+
+# Start of program
+
+driver.get(root_url) 
+get_year_urls()
+for year_url in year_urls:
+  get_month_urls(year_url)
+
+# for month_url in month_urls:
+#   get_day_urls(month_url)
+
+# for day_url in day_urls:
+#   get_changelog_urls(day_url)
+
+for i in range(3):
+  get_day_urls(month_urls[i])
+for i in range(3):
+  get_changelog_urls(day_urls[i])
+
+file = open(filePath, 'w')
+for changelog_url in changelog_urls:
+  search_urls(file, changelog_url)
