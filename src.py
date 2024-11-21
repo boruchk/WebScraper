@@ -11,7 +11,7 @@ changelog_urls = []
 driver = webdriver.Chrome() # to open the browser 
 wait = WebDriverWait(driver, 10)
 
-keywords = ['desktop', 'Desktop', 'DESKTOP', 'pc', 'Pc', 'PC']
+keywords = ['desktop', 'Desktop', 'DESKTOP', ' pc ', ' Pc ', ' PC ']
 filePath = "daysMentioned.txt"
 
 
@@ -77,32 +77,10 @@ def search_urls(file, changelog_url):
 
   for i in range(len(textboxes)):
     for word in keywords:
-      if textboxes[i].find_elements(By.XPATH, "//*[contains(text(), 'desktop')]"):
-        date = changelog_url[-12:-3]
-        file.write(date)
+      if textboxes[i].find_elements(By.XPATH, f"//*[contains(text(), '{word}')]"):
+        date = changelog_url[-12:]
+        file.write(f"{date} - {word}")
         file.write('\n')
-      elif textboxes[i].find_elements(By.XPATH, "//*[contains(text(), 'Desktop')]"):
-        date = changelog_url[-12:-3]
-        file.write(date)
-        file.write('\n')
-      elif textboxes[i].find_elements(By.XPATH, "//*[contains(text(), 'DESKTOP')]"):
-        date = changelog_url[-12:-3]
-        file.write(date)
-        file.write('\n')
-      elif textboxes[i].find_elements(By.XPATH, "//*[contains(text(), 'pc')]"):
-        date = changelog_url[-12:-3]
-        file.write(date)
-        file.write('\n')
-      elif textboxes[i].find_elements(By.XPATH, "//*[contains(text(), 'Pc')]"):
-        date = changelog_url[-12:-3]
-        file.write(date)
-        file.write('\n')
-      elif textboxes[i].find_elements(By.XPATH, "//*[contains(text(), 'PC')]"):
-        date = changelog_url[-12:-3]
-        file.write(date)
-        file.write('\n')
-
-
 
 # Start of program
 
@@ -111,17 +89,20 @@ get_year_urls()
 for year_url in year_urls:
   get_month_urls(year_url)
 
-# for month_url in month_urls:
-#   get_day_urls(month_url)
+for month_url in month_urls:
+  get_day_urls(month_url)
 
-# for day_url in day_urls:
-#   get_changelog_urls(day_url)
-
-for i in range(3):
-  get_day_urls(month_urls[i])
-for i in range(3):
-  get_changelog_urls(day_urls[i])
+for day_url in day_urls:
+  get_changelog_urls(day_url)
+  
+# test code
+# for i in range(3):
+#   get_day_urls(month_urls[i])
+# for i in range(1):
+#   get_changelog_urls(day_urls[i])
 
 file = open(filePath, 'w')
 for changelog_url in changelog_urls:
   search_urls(file, changelog_url)
+
+file.close()
