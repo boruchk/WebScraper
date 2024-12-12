@@ -1,6 +1,7 @@
 # files to be ignored:
-urls/dayUrls.txt
+urls\dayUrls.txt
 urls/oldDayUrls.txt
 urls/monthUrls.txt
 urls/yearUrls.txt
 urls/changelogUrls.txt
+urls/changelogUrls2.txt

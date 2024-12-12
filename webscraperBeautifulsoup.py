@@ -118,7 +118,7 @@ for day_url in dayFile:
 dayFile.close()
 changelogFile.close()
 
-urlFile = open("urls\changelogurls.txt", 'r')
+urlFile = open("urls\changelogurls2.txt", 'r')
 mentionFile = open("daysMentioned.txt", 'a')
 for changelog_url in urlFile:
   search_urls(mentionFile, changelog_url)
