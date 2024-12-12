@@ -4,8 +4,14 @@ import requests
 from bs4 import BeautifulSoup
 
 
-root_url = 'https://lkml.org/lkml'
-keywords = ['desktop', 'Desktop', 'DESKTOP', ' pc ', ' Pc ', ' PC ']
+ROOTURL = 'https://lkml.org/lkml'
+KEYWORDS = ['desktop', ' pc ']
+YEARFILEPATH = "urls\yearUrls.txt"
+MONTHFILEPATH = "urls\monthUrls.txt"
+DAYFILEPATH = "urls\dayUrls.txt"
+CHANGELOGFILEPATH = "urls\changelogurls.txt"
+MENTIONFILEPATH = "daysMentioned.txt"
+
 
 
 def fetch_url_with_backoff(url, retryCount=4, backOffFactor=1):
@@ -29,7 +35,7 @@ def fetch_url_with_backoff(url, retryCount=4, backOffFactor=1):
 
 def get_year_urls():
   file = open("urls\yearUrls.txt", 'a')
-  fetchedHtml = fetch_url_with_backoff(root_url)
+  fetchedHtml = fetch_url_with_backoff(ROOTURL)
   if fetchedHtml is None:
     print("Failed to fetch content from the URL.")
     return
@@ -86,12 +92,12 @@ def search_urls(mentionFile, changelog_url):
     return
 
   soup = BeautifulSoup(fetchedHtml.text, features="xml")
-  result = soup.get_text()
+  result = soup.get_text().lower()
   pattern = r"/lkml/(\d{4})"  # Captures the year of the changelog
   year = re.search(pattern, changelog_url).group(1)[-4:]
-  for word in keywords:
+  for word in KEYWORDS:
     if word in result:
-      mentionFile.write(f"{year} - {word}\n")
+      mentionFile.write(f"{year} - {word} - {changelog_url}\n")
 
         
 
@@ -99,29 +105,29 @@ def search_urls(mentionFile, changelog_url):
 
 # get_year_urls()
 
-# yearFile = open("urls\yearUrls.txt", 'r')
-# monthFile = open("urls\monthUrls.txt", 'r')
+# yearFile = open(YEARFILEPATH, 'r')
+# monthFile = open(MONTHFILEPATH, 'r')
 # for year_url in yearFile:
 #   get_month_urls(monthFile, year_url.strip('\n'))
 # yearFile.close()
 # monthFile.close()
 
-# monthFile = open("urls\monthUrls.txt", 'r')
-# dayFile = open("urls\dayUrls.txt", 'r')
+# monthFile = open(MONTHFILEPATH, 'r')
+# dayFile = open(DAYFILEPATH, 'r')
 # for month_url in monthFile:
 #   get_day_urls(dayFile, month_url.strip('\n'))
 # monthFile.close()
 # dayFile.close()
 
-# dayFile = open("urls\dayUrls.txt", 'r')
-# changelogFile = open("urls\changelogurls.txt", 'a')
+# dayFile = open(DAYFILEPATH, 'r')
+# changelogFile = open(CHANGELOGFILEPATH, 'a')
 # for day_url in dayFile:
 #   get_changelog_urls(changelogFile, day_url.strip('\n'))
 # dayFile.close()
 # changelogFile.close()
 
-urlFile = open("urls\changelogurls.txt", 'r')
-mentionFile = open("daysMentioned.txt", 'a')
+urlFile = open(CHANGELOGFILEPATH, 'r')
+mentionFile = open(MENTIONFILEPATH, 'a')
 for changelog_url in urlFile:
   search_urls(mentionFile, changelog_url.strip('\n'))
   urlFile.readline()
