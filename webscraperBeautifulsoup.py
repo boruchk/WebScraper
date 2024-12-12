@@ -1,4 +1,5 @@
 from time import sleep
+import re
 import requests
 from bs4 import BeautifulSoup
 
@@ -7,7 +8,7 @@ root_url = 'https://lkml.org/lkml'
 keywords = ['desktop', 'Desktop', 'DESKTOP', ' pc ', ' Pc ', ' PC ']
 
 
-def fetch_url_with_backoff(url, retryCount=5, backOffFactor=1):
+def fetch_url_with_backoff(url, retryCount=4, backOffFactor=1):
   for attempt in range(retryCount):
     try:
       response = requests.get(url)
@@ -86,10 +87,11 @@ def search_urls(mentionFile, changelog_url):
 
   soup = BeautifulSoup(fetchedHtml.text, features="xml")
   result = soup.get_text()
-  date = changelog_url[-10:]
+  pattern = r"/lkml/(\d{4})"  # Captures the year of the changelog
+  year = re.search(pattern, changelog_url).group(1)[-4:]
   for word in keywords:
     if word in result:
-      mentionFile.write(f"{date} - {word}\n")
+      mentionFile.write(f"{year} - {word}\n")
 
         
 
@@ -111,17 +113,18 @@ def search_urls(mentionFile, changelog_url):
 # monthFile.close()
 # dayFile.close()
 
-dayFile = open("urls\dayUrls.txt", 'r')
-changelogFile = open("urls\changelogurls.txt", 'a')
-for day_url in dayFile:
-  get_changelog_urls(changelogFile, day_url.strip('\n'))
-dayFile.close()
-changelogFile.close()
+# dayFile = open("urls\dayUrls.txt", 'r')
+# changelogFile = open("urls\changelogurls.txt", 'a')
+# for day_url in dayFile:
+#   get_changelog_urls(changelogFile, day_url.strip('\n'))
+# dayFile.close()
+# changelogFile.close()
 
-urlFile = open("urls\changelogurls2.txt", 'r')
+urlFile = open("urls\changelogurls.txt", 'r')
 mentionFile = open("daysMentioned.txt", 'a')
 for changelog_url in urlFile:
-  search_urls(mentionFile, changelog_url)
+  search_urls(mentionFile, changelog_url.strip('\n'))
+  urlFile.readline()
 
 urlFile.close()
 mentionFile.close()
