@@ -1,17 +1,10 @@
 from time import sleep
-import re
 import requests
 from bs4 import BeautifulSoup
 
-# exponential backoff
+
 root_url = 'https://lkml.org/lkml'
-year_urls = []
-month_urls = []
-day_urls = []
-changelog_urls = []
-
 keywords = ['desktop', 'Desktop', 'DESKTOP', ' pc ', ' Pc ', ' PC ']
-
 
 
 def fetch_url_with_backoff(url, retryCount=5, backOffFactor=1):
@@ -48,7 +41,7 @@ def get_year_urls():
   file.close()
 
 
-def get_month_urls(yearFile, year_url):
+def get_month_urls(monthFile, year_url):
   fetchedHtml = fetch_url_with_backoff(year_url)
   if fetchedHtml is None:
     print("Failed to fetch content from the URL.")
@@ -57,10 +50,10 @@ def get_month_urls(yearFile, year_url):
   soup = BeautifulSoup(fetchedHtml.text, features="xml")
   for child in soup.findAll('a', class_="nb"):
     if len(child.text) == 8:
-      yearFile.write(f"https://lkml.org{child.get('href')}\n")
+      monthFile.write(f"https://lkml.org{child.get('href')}\n")
 
 
-def get_day_urls(monthFile, month_url):
+def get_day_urls(dayFile, month_url):
   fetchedHtml = fetch_url_with_backoff(month_url)
   if fetchedHtml is None:
     print("Failed to fetch content from the URL.")
@@ -69,7 +62,7 @@ def get_day_urls(monthFile, month_url):
   soup = BeautifulSoup(fetchedHtml.text, features="xml")
   for child in soup.findAll('a', class_="nb"):
     if len(child.text) >= 10 and len(child.text) <= 11:
-      monthFile.write(f"https://lkml.org{child.get('href')}\n")
+      dayFile.write(f"https://lkml.org{child.get('href')}\n")
 
 
 def get_changelog_urls(changelogFile, day_url):
@@ -85,7 +78,7 @@ def get_changelog_urls(changelogFile, day_url):
       changelogFile.write(f"https://lkml.org{child.get('href')}\n")
 
 
-def search_urls(changelog_url):
+def search_urls(mentionFile, changelog_url):
   fetchedHtml = fetch_url_with_backoff(changelog_url)
   if fetchedHtml is None:
     print("Failed to fetch content from the URL.")
@@ -96,8 +89,7 @@ def search_urls(changelog_url):
   date = changelog_url[-10:]
   for word in keywords:
     if word in result:
-      file.write(f"{date} - {word}")
-      file.write('\n')    
+      mentionFile.write(f"{date} - {word}\n")
 
         
 
@@ -106,14 +98,18 @@ def search_urls(changelog_url):
 # get_year_urls()
 
 # yearFile = open("urls\yearUrls.txt", 'r')
-# for year_url in file:
-#   get_month_urls(yearFile, year_url.strip('\n'))
+# monthFile = open("urls\monthUrls.txt", 'r')
+# for year_url in yearFile:
+#   get_month_urls(monthFile, year_url.strip('\n'))
 # yearFile.close()
+# monthFile.close()
 
 # monthFile = open("urls\monthUrls.txt", 'r')
-# for month_url in file:
-#   get_day_urls(monthFile, month_url.strip('\n'))
+# dayFile = open("urls\dayUrls.txt", 'r')
+# for month_url in monthFile:
+#   get_day_urls(dayFile, month_url.strip('\n'))
 # monthFile.close()
+# dayFile.close()
 
 dayFile = open("urls\dayUrls.txt", 'r')
 changelogFile = open("urls\changelogurls.txt", 'a')
@@ -122,10 +118,10 @@ for day_url in dayFile:
 dayFile.close()
 changelogFile.close()
 
-urlFile = open(urlFilePath, 'r')
-mentionFile = open(mentionFilePath, 'w')
-for changelog_url in changelog_urls:
+urlFile = open("urls\changelogurls.txt", 'r')
+mentionFile = open("daysMentioned.txt", 'a')
+for changelog_url in urlFile:
   search_urls(mentionFile, changelog_url)
 
-# urlFile.close()
-# mentionFile.close()
+urlFile.close()
+mentionFile.close()
